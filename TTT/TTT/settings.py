@@ -64,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -122,7 +123,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 #静态目录
-MEDIA_ROOT = os.path.join(BASE_DIR,"media")
+MEDIA_ROOT = BASE_DIR /'static/media'
 MEDIA_URL = "/media/"
 # STATIC_URL = '/myStatic/'
 # STATICFILES_DIRS = [

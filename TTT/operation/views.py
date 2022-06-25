@@ -3,68 +3,53 @@ from email.mime import image
 from pyexpat import model
 from tkinter import image_names
 from turtle import title
+from types import new_class
+from urllib import request
 from django.conf import settings
 from django.forms import modelformset_factory
 from django.shortcuts import render
 from django.http import HttpResponse
 from operation.models import books
+from operation.utils.uploads import getNewName
 import json
 import os
-from django import forms
-from operation.utils.bootstrap import BootStrapForm
 # from django import forms
-# Create your views here.
+# from operation.utils.bootstrap import BootStrapForm
+
 
 #测试
 # def orm(request):
 #     books.objects.create(isbn='98765',bookname="运维部",publishertime='2022-06-21 16:14:19')
 #     return HttpResponse("添加成功")
 
-class UpForm(forms.Form):
-    isbn=forms.CharField(label='书籍编号')
-    booknamen=forms.CharField(label='书籍名字')
-    publishertime=forms.CharField(label='出版日期')
-    img=forms.FileField(label='图片')
-
 
 #增加
 def add(request):
-    form=UpForm(data=request.POST,files=request.FILES)
     isbn1=request.POST.get("isbn")
     bookname1=request.POST.get("bookname")
     publishertime1=request.POST.get("publishertime")
-    if form.is_valid():
-        img_obj=form.changed_data.POST.get("media")
-        file_path=os.path.join("operation","static","media",img_obj.name)
-        f=open(file_path,mode='wb')
-        for chunk in img_obj.chunks():
-            f.write(chunk)
-        f.close()
-        addlist=books.objects.create(
-            isbn=isbn1,
-            bookname=bookname1,
-            publishertime=publishertime1,
-            picture=file_path,
-        )
-    # print(addlist)
-    return HttpResponse("上传成功")
+    pict = request.FILES['pictrue']
+    new_name = getNewName('pictrue') 
+    print("name file = " + new_name)
+    # 将要保存的地址和文件名称
+    where = '%s/users/%s' % (settings.MEDIA_ROOT, new_name)
+    # 分块保存image
+    content = pict.chunks()
+    with open(where, 'wb') as f:
+        for i in content:
+            f.write(i)
+    addlist=books.objects.create(
+        isbn=isbn1,
+        bookname=bookname1,
+        publishertime=publishertime1,
+        pictrue=pict
+    )
+    print(addlist)
+    return HttpResponse(json.dumps(addlist),'multipart/form-data')
 
-    # isbn1=request.POST.get("isbn")
-    # bookname1=request.POST.get("bookname")
-    # publishertime1=request.POST.get("publishertime")
-    # addlist=books.objects.create(
-    #     isbn=isbn1,
-    #     bookname=bookname1,
-    #     publishertime=publishertime1,
-    # )
-    # print(addlist)
-    # return HttpResponse("添加成功")
-    
 
 #全部查询
 def query(request):
-    # offset=int(request.GET.get('offset'))
-    # pagesize=int(request.GET.get('pagesize'))
     qy1=books.objects.all().values()
     data1=list(qy1)
     print(data1)
@@ -98,48 +83,29 @@ def delete(request):
     print(Del)
     return HttpResponse('删除成功')
 
+def show_avatar(request):
+    user = books.objects.filter(name='trent')[0]
+    avatarName = str(user.avatar)
+    avatarUrl = os.path.join(settings.MEDIA_URL, 'users', avatarName)
+    avatar_info = {'userName':'trent', 'avatarUrl': avatarUrl}
+    return HttpResponse(json.dumps(avatar_info),'application/json')
 
+def add_user_image(request):
+    return render(request)
 #上传图片
-def picture(request):
-    if request.method=='POST':
-        img_obj=request.FILES.get("test.shlian")
-        f=open(os.path.join(settings.MEDIA_ROOT,"upload",img_obj.name),'wb')
-        for chunk in img_obj.chunks():
-            f.write(chunk)
-        f.close()
-        result={"result":"OK","filename":img_obj.name,"media_root":os.path.join(settings.MEDIA_ROOT,"upload")}
-    return HttpResponse(result)
-
-    # print(request)
-    # file=request.FILES['name']
-    # print(file)
-    # root='%s/%s'%(settings.PICTURE,file.name)
-    # with open(root,'wb') as f:
-    #     for i in file.chunks():
-    #         f.write(i)
-    
-    
-# def photo(request):
-#     if request.method=='POST':
-#         new_img=books(
-#             photo=request.FILES.get('photo'),
-#             user=request.FILES.get('photo').name
-#         )
-#         new_img.save()
-#     return HttpResponse('上传成功')
-
-
-# def upload(request):
-#     f1=request.FILES.get('picture')
-#     p=Pictures()
-#     p.pic="booktest/"+f1.name
-#     p.save()
-#     fname=settings.MEDIA_ROOT+"/booktest/"+f1.name
-#     with open(fname,"wb") as pic:
-#         for c in f1.chunks():
-#             pic.write(c)
-#     return HttpResponse("上传成功")
-# def show_pic(request):
-#     nid4=request.POST.get("id")
-#     pic_obj=Pictures.objects.get(id=nid4)
-#     return HttpResponse(json.dumps(pic_obj),'application/json')
+def upload_handle(request):
+    # 获取一个文件管理器对象
+    file = request.FILES['pic']
+    # 保存文件
+    new_name = getNewName('pic') # 具体实现在自己写的uploads.py下
+	# 将要保存的地址和文件名称
+    where = '%s/users/%s' % (settings.MEDIA_ROOT, new_name)
+    # 分块保存image
+    content = file.chunks()
+    with open(where, 'wb') as f:
+        for i in content:
+            f.write(i)
+    # 上传文件名称到数据库
+    books.objects.update(picture=new_name)
+    # 返回的httpresponse
+    return HttpResponse('ok')

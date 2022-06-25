@@ -29,5 +29,8 @@ urlpatterns = [
     path('select/',views.select),
     path('update/',views.update),
     path('delete/',views.delete),
-    re_path(r'^media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT},name='media')
- ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('add_user_image/', views.add_user_image, name='add_user_image'),
+    path('upload_handle/', views.upload_handle, name='upload_handle'),
+    path('show_avatar/', views.show_avatar, name='show_avatar'),
+
+  ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
