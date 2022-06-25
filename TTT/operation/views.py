@@ -28,21 +28,11 @@ def add(request):
     isbn1=request.POST.get("isbn")
     bookname1=request.POST.get("bookname")
     publishertime1=request.POST.get("publishertime")
-    pict = request.FILES['pictrue']
-    new_name = getNewName('pictrue') 
-    print("name file = " + new_name)
-    # 将要保存的地址和文件名称
-    where = '%s/users/%s' % (settings.MEDIA_ROOT, new_name)
-    # 分块保存image
-    content = pict.chunks()
-    with open(where, 'wb') as f:
-        for i in content:
-            f.write(i)
     addlist=books.objects.create(
         isbn=isbn1,
         bookname=bookname1,
         publishertime=publishertime1,
-        pictrue=pict
+
     )
     print(addlist)
     return HttpResponse(json.dumps(addlist),'multipart/form-data')
